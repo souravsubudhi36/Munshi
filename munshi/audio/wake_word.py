@@ -33,25 +33,49 @@ class WakeWordDetector:
         try:
             from openwakeword.model import Model as OWWModel
 
+            # Define local paths
+            local_models_dir = Path(settings.models_dir) / "wake_word"
+            embedding_path = local_models_dir / "embedding_model.onnx"
+            melspec_path = local_models_dir / "melspectrogram.onnx"
+
+            # Check if local features exist (useful if site-packages is missing them)
+            oww_kwargs = {"inference_framework": "onnx"}
+            if embedding_path.exists():
+                oww_kwargs["embedding_model_path"] = str(embedding_path)
+            if melspec_path.exists():
+                oww_kwargs["melspec_model_path"] = str(melspec_path)
+
             model_path = Path(settings.wake_word_model_path)
             if model_path.exists():
                 self._model = OWWModel(
                     wakeword_models=[str(model_path)],
-                    inference_framework="onnx",
+                    **oww_kwargs,
                 )
                 logger.info(f"Loaded custom wake word model: {model_path}")
             else:
-                # Fall back to built-in "hey_jarvis" as placeholder
-                self._model = OWWModel(
-                    wakeword_models=["hey_jarvis"],
-                    inference_framework="onnx",
-                )
-                logger.warning(
-                    f"Custom wake word model not found at {model_path}. "
-                    "Using 'hey_jarvis' placeholder. Run scripts/download_models.py"
-                )
+                # Fall back to local hey_jarvis if available
+                local_fallback = local_models_dir / "hey_jarvis_v0.1.onnx"
+                if local_fallback.exists():
+                    self._model = OWWModel(
+                        wakeword_models=[str(local_fallback)],
+                        **oww_kwargs,
+                    )
+                    logger.warning(f"Using local fallback model: {local_fallback}")
+                else:
+                    # Last resort: try built-in name (which might fail if resources are missing)
+                    self._model = OWWModel(
+                        wakeword_models=["hey_jarvis"],
+                        **oww_kwargs,
+                    )
+                    logger.warning(
+                        f"Custom wake word model not found at {model_path}. "
+                        "Using 'hey_jarvis' placeholder. Run scripts/download_models.py"
+                    )
         except ImportError:
             logger.error("openWakeWord not installed. Wake word detection disabled.")
+            self._model = None
+        except Exception as e:
+            logger.error(f"Failed to load wake word model: {e}")
             self._model = None
 
     def _detection_loop(self) -> None:

@@ -41,6 +41,7 @@ num2words = "^0.5"
 
 # Cloud sync (optional)
 supabase = { version = "^2.10", optional = true }
+greenlet = "^3.3.2"
 
 [tool.poetry.extras]
 cloud = ["supabase"]
