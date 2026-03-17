@@ -1,0 +1,63 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "munshi"
+version = "0.1.0"
+description = "Voice-first AI assistant for Indian kirana stores"
+authors = []
+readme = "README.md"
+packages = [{ include = "munshi" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+# Voice pipeline
+openWakeWord = "^0.6"
+sounddevice = "^0.4"
+PyAudio = "^0.2"
+webrtcvad = "^2.0"
+
+# AI / NLP
+anthropic = "^0.40"
+spacy = "^3.7"
+rapidfuzz = "^3.6"
+
+# Backend / Framework
+fastapi = "^0.115"
+uvicorn = { extras = ["standard"], version = "^0.32" }
+sqlalchemy = { extras = ["asyncio"], version = "^2.0" }
+aiosqlite = "^0.20"
+alembic = "^1.13"
+pydantic-settings = "^2.6"
+apscheduler = "^3.10"
+
+# Utilities
+loguru = "^0.7"
+httpx = "^0.27"
+pendulum = "^3.0"
+num2words = "^0.5"
+
+# Cloud sync (optional)
+supabase = { version = "^2.10", optional = true }
+
+[tool.poetry.extras]
+cloud = ["supabase"]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3"
+pytest-asyncio = "^0.24"
+pytest-cov = "^6.0"
+ruff = "^0.8"
+
+[tool.poetry.scripts]
+munshi = "munshi.main:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
