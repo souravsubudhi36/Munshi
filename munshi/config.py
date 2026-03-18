@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     models_dir: str = "./data/models"
     wake_word_model_path: str = "./data/models/wake_word/munshi.onnx"
 
+    # Development / Testing
+    disable_wake_word: bool = False  # Set to true to skip wake word and listen immediately
+
     @property
     def sarvam_enabled(self) -> bool:
         return bool(self.sarvam_api_key)

@@ -11,6 +11,7 @@ from munshi.audio.stt import STTEngine
 from munshi.audio.tts import TTSEngine
 from munshi.audio.vad import VADCapture
 from munshi.audio.wake_word import WakeWordDetector
+from munshi.config import settings
 
 
 class AudioState(Enum):
@@ -49,8 +50,11 @@ class AudioManager:
     async def start(self) -> None:
         """Start background wake word detection."""
         self._loop = asyncio.get_event_loop()
-        self._wake_detector.start()
-        logger.info("AudioManager started — say 'Munshi' to activate.")
+        if settings.disable_wake_word:
+            logger.warning("Wake word disabled — listening immediately on each turn.")
+        else:
+            self._wake_detector.start()
+            logger.info("AudioManager started — say 'Munshi' to activate.")
 
     async def stop(self) -> None:
         """Stop all audio processing."""
@@ -61,10 +65,11 @@ class AudioManager:
         Wait for wake word, capture utterance, and return transcript.
         This is the main interface for the orchestrator.
         """
-        # Wait for wake word
+        # Wait for wake word (skip if disabled for testing)
         self._wake_detected_event.clear()
         self.state = AudioState.IDLE
-        await self._wake_detected_event.wait()
+        if not settings.disable_wake_word:
+            await self._wake_detected_event.wait()
 
         self.state = AudioState.LISTENING
         await self.play_listening_chime()
